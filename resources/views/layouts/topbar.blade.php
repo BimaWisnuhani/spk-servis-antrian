@@ -20,7 +20,7 @@
 
             {{-- Jargon SPK --}}
             <div class="topbar-jargon d-none d-lg-block">
-                SPK Pendukung Keputusan: Optimasi Antrian Servis Pada Bengkel XYZ
+                Sistem Manjemen Servis & Antrian Bengkel Utama Motor
             </div>
         </div>
     </div>

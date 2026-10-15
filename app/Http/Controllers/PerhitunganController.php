@@ -6,6 +6,7 @@ use App\Models\AntrianServis;
 use App\Models\BobotKriteria;
 use App\Models\SubKriteria;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -82,6 +83,110 @@ class PerhitunganController extends Controller
     /**
      * Mengambil dan mencocokkan skor dari database SubKriteria secara dinamis
      */
+    // private function getSkorDatabase($antrian, $kriteria)
+    // {
+    //     $subKriterias = SubKriteria::where('bobot_kriteria_id', $kriteria->id)->get();
+    //     if ($subKriterias->isEmpty()) {
+    //         return 1;
+    //     }
+
+    //     $kode = strtoupper($kriteria->kode);
+
+    //     // 1. Tentukan sumber nilai dari model AntrianServis
+    //     $fieldValue = null;
+    //     if ($kode == 'C1') {
+    //         $fieldValue = $antrian->jenis_servis ?? $antrian->c1_id ?? null;
+    //     } elseif ($kode == 'C2') {
+    //         $fieldValue = $antrian->estimasi_waktu ?? $antrian->c2_id ?? null;
+    //     } elseif ($kode == 'C3') {
+    //         $fieldValue = $antrian->awal_kedatangan ?? $antrian->waktu_datang ?? $antrian->c3_id ?? null;
+    //     } elseif ($kode == 'C5') {
+    //         $fieldValue = $antrian->status_pesan ?? $antrian->c5_id ?? null;
+    //     }
+
+    //     if ($fieldValue === null || $fieldValue === '') {
+    //         return 1;
+    //     }
+
+    //     // 2. CEK METODE 1: Jika field menyimpan ID SubKriteria langsung (selain C2 dan C3)
+    //     if (is_numeric($fieldValue) && !in_array($kode, ['C2', 'C3'])) {
+    //         $subDirect = $subKriterias->firstWhere('id', (int)$fieldValue);
+    //         if ($subDirect) {
+    //             return $subDirect->skor;
+    //         }
+    //     }
+
+    //     // 3. CEK METODE 2: Pencocokan Teks Kategori (C1 & C5)
+    //     $matched = $subKriterias->first(function ($sub) use ($fieldValue) {
+    //         $nama = strtolower(trim($sub->sub_kriteria ?? $sub->nama_sub_kriteria));
+    //         return $nama === strtolower(trim($fieldValue));
+    //     });
+
+    //     if ($matched) {
+    //         return $matched->skor;
+    //     }
+
+    //     // 4. CEK METODE 3: PARSING KRITERIA C2 (Estimasi Waktu - Menit)
+    //     if ($kode == 'C2') {
+    //         $menit = (int) filter_var($fieldValue, FILTER_SANITIZE_NUMBER_INT);
+
+    //         foreach ($subKriterias as $sub) {
+    //             // Normalisasi karakter dash (–, — ke -)
+    //             $teks = str_replace(['–', '—'], '-', strtolower(trim($sub->sub_kriteria ?? $sub->nama_sub_kriteria)));
+
+    //             if (str_contains($teks, '>')) {
+    //                 $batas = (int) filter_var($teks, FILTER_SANITIZE_NUMBER_INT);
+    //                 if ($menit > $batas) return $sub->skor;
+    //             } elseif (str_contains($teks, '<=') || str_contains($teks, '≤')) {
+    //                 $batas = (int) filter_var($teks, FILTER_SANITIZE_NUMBER_INT);
+    //                 if ($menit <= $batas) return $sub->skor;
+    //             } elseif (str_contains($teks, '-')) {
+    //                 $parts = explode('-', $teks);
+    //                 $min = (int) filter_var($parts[0], FILTER_SANITIZE_NUMBER_INT);
+    //                 $max = (int) filter_var($parts[1], FILTER_SANITIZE_NUMBER_INT);
+    //                 if ($menit >= $min && $menit <= $max) return $sub->skor;
+    //             }
+    //         }
+    //     }
+
+    //     // 5. CEK METODE 4: PARSING KRITERIA C3 (Awal Kedatangan - Jam:Menit)
+    //     if ($kode == 'C3') {
+    //         // Ambil format jam dan menit (HH:mm)
+    //         $jamDatang = Carbon::parse($fieldValue)->format('H:i');
+
+    //         foreach ($subKriterias as $sub) {
+    //             // Normalisasi karakter dash
+    //             $teks = str_replace(['–', '—'], '-', strtolower(trim($sub->sub_kriteria ?? $sub->nama_sub_kriteria)));
+
+    //             // Tangkap pattern HH:mm
+    //             preg_match_all('/\d{1,2}:\d{2}/', $teks, $matches);
+    //             $times = $matches[0] ?? [];
+
+    //             // Format string waktu agar konsisten 5 karakter (misal "8:30" -> "08:30")
+    //             $times = array_map(function($t) {
+    //                 return sprintf('%05s', $t);
+    //             }, $times);
+
+    //             if ((str_contains($teks, '<=') || str_contains($teks, '≤')) && isset($times[0])) {
+    //                 if ($jamDatang <= $times[0]) return $sub->skor;
+    //             } elseif (str_contains($teks, '>') && isset($times[0])) {
+    //                 if ($jamDatang > $times[0]) return $sub->skor;
+    //             } elseif (str_contains($teks, '-') && count($times) >= 2) {
+    //                 if ($jamDatang >= $times[0] && $jamDatang <= $times[1]) {
+    //                     return $sub->skor;
+    //                 }
+    //             }
+    //         }
+    //     }
+
+    //     return 1;
+    // }
+
+
+    /**
+     * Mengambil dan mencocokkan skor dari database SubKriteria secara dinamis
+     * Mendukung penjumlahan skor untuk Multiple Choice Service (C1)
+     */
     private function getSkorDatabase($antrian, $kriteria)
     {
         $subKriterias = SubKriteria::where('bobot_kriteria_id', $kriteria->id)->get();
@@ -91,31 +196,64 @@ class PerhitunganController extends Controller
 
         $kode = strtoupper($kriteria->kode);
 
-        // 1. Tentukan sumber nilai dari model AntrianServis
-        $fieldValue = null;
+        // KHUSUS KRITERIA C1 (JENIS LAYANAN): Mendukung Multiple Choice (Bisa > 1 Layanan)
         if ($kode == 'C1') {
-            $fieldValue = $antrian->jenis_servis ?? $antrian->c1_id ?? null;
-        } elseif ($kode == 'C2') {
+            // 1. Cek melalui relasi tabel pivot (antrian_servis_sub_kriteria)
+            $subKriteriaIds = DB::table('antrian_servis_sub_kriteria')
+                ->where('antrian_servis_id', $antrian->id)
+                ->pluck('sub_kriteria_id');
+
+            if ($subKriteriaIds->isNotEmpty()) {
+                $totalSkorPivot = SubKriteria::whereIn('id', $subKriteriaIds)
+                    ->where('bobot_kriteria_id', $kriteria->id)
+                    ->sum('skor');
+
+                if ($totalSkorPivot > 0) {
+                    return $totalSkorPivot;
+                }
+            }
+
+            // 2. Jika tidak melalui pivot, parse dari string teks yang dipisah koma (",")
+            $fieldValue = $antrian->jenis_servis ?? null;
+            if (!empty($fieldValue)) {
+                // Pisahkan string berdasarkan tanda koma
+                $services = array_map('trim', explode(',', $fieldValue));
+                $totalSkorString = 0;
+                $foundMatch = false;
+
+                foreach ($services as $serviceName) {
+                    $matched = $subKriterias->first(function ($sub) use ($serviceName) {
+                        $nama = strtolower(trim($sub->sub_kriteria ?? $sub->nama_sub_kriteria));
+                        return $nama === strtolower($serviceName);
+                    });
+
+                    if ($matched) {
+                        $totalSkorString += (int) $matched->skor;
+                        $foundMatch = true;
+                    }
+                }
+
+                if ($foundMatch) {
+                    return $totalSkorString;
+                }
+            }
+        }
+
+        // --- PENANGANAN KRITERIA LAINNYA (C2, C3, C5, dll.) ---
+        $fieldValue = null;
+        if ($kode == 'C2') {
             $fieldValue = $antrian->estimasi_waktu ?? $antrian->c2_id ?? null;
         } elseif ($kode == 'C3') {
             $fieldValue = $antrian->awal_kedatangan ?? $antrian->waktu_datang ?? $antrian->c3_id ?? null;
-        } elseif ($kode == 'C5') {
-            $fieldValue = $antrian->status_pesan ?? $antrian->c5_id ?? null;
+        } elseif ($kode == 'C5' || $kode == 'C4') {
+            $fieldValue = $antrian->status_pesan ?? $antrian->c5_id ?? $antrian->c4_id ?? null;
         }
 
         if ($fieldValue === null || $fieldValue === '') {
             return 1;
         }
 
-        // 2. CEK METODE 1: Jika field menyimpan ID SubKriteria langsung (selain C2 dan C3)
-        if (is_numeric($fieldValue) && !in_array($kode, ['C2', 'C3'])) {
-            $subDirect = $subKriterias->firstWhere('id', (int)$fieldValue);
-            if ($subDirect) {
-                return $subDirect->skor;
-            }
-        }
-
-        // 3. CEK METODE 2: Pencocokan Teks Kategori (C1 & C5)
+        // Cek pencocokan teks tunggal standar
         $matched = $subKriterias->first(function ($sub) use ($fieldValue) {
             $nama = strtolower(trim($sub->sub_kriteria ?? $sub->nama_sub_kriteria));
             return $nama === strtolower(trim($fieldValue));
@@ -125,14 +263,11 @@ class PerhitunganController extends Controller
             return $matched->skor;
         }
 
-        // 4. CEK METODE 3: PARSING KRITERIA C2 (Estimasi Waktu - Menit)
+        // Parsing C2 (Estimasi Waktu - Menit)
         if ($kode == 'C2') {
             $menit = (int) filter_var($fieldValue, FILTER_SANITIZE_NUMBER_INT);
-
             foreach ($subKriterias as $sub) {
-                // Normalisasi karakter dash (–, — ke -)
                 $teks = str_replace(['–', '—'], '-', strtolower(trim($sub->sub_kriteria ?? $sub->nama_sub_kriteria)));
-
                 if (str_contains($teks, '>')) {
                     $batas = (int) filter_var($teks, FILTER_SANITIZE_NUMBER_INT);
                     if ($menit > $batas) return $sub->skor;
@@ -148,38 +283,29 @@ class PerhitunganController extends Controller
             }
         }
 
-        // 5. CEK METODE 4: PARSING KRITERIA C3 (Awal Kedatangan - Jam:Menit)
+        // Parsing C3 (Waktu Kedatangan)
         if ($kode == 'C3') {
-            // Ambil format jam dan menit (HH:mm)
             $jamDatang = Carbon::parse($fieldValue)->format('H:i');
-
             foreach ($subKriterias as $sub) {
-                // Normalisasi karakter dash
                 $teks = str_replace(['–', '—'], '-', strtolower(trim($sub->sub_kriteria ?? $sub->nama_sub_kriteria)));
-
-                // Tangkap pattern HH:mm
                 preg_match_all('/\d{1,2}:\d{2}/', $teks, $matches);
                 $times = $matches[0] ?? [];
-
-                // Format string waktu agar konsisten 5 karakter (misal "8:30" -> "08:30")
-                $times = array_map(function($t) {
-                    return sprintf('%05s', $t);
-                }, $times);
+                $times = array_map(function($t) { return sprintf('%05s', $t); }, $times);
 
                 if ((str_contains($teks, '<=') || str_contains($teks, '≤')) && isset($times[0])) {
                     if ($jamDatang <= $times[0]) return $sub->skor;
                 } elseif (str_contains($teks, '>') && isset($times[0])) {
                     if ($jamDatang > $times[0]) return $sub->skor;
                 } elseif (str_contains($teks, '-') && count($times) >= 2) {
-                    if ($jamDatang >= $times[0] && $jamDatang <= $times[1]) {
-                        return $sub->skor;
-                    }
+                    if ($jamDatang >= $times[0] && $jamDatang <= $times[1]) return $sub->skor;
                 }
             }
         }
 
         return 1;
     }
+
+
 
     public function exportPdf()
     {

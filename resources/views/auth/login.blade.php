@@ -92,8 +92,8 @@
                     <div class="icon-box">
                         <i class="fas fa-wrench fa-2x"></i>
                     </div>
-                    <h4 class="fw-bold mb-1">SIP-BENGKEL</h4>
-                    <p class="small text-white-50 mb-0">Sistem Informasi & Antrian Servis</p>
+                    <h4 class="fw-bold mb-1">Utomo-Motor</h4>
+                    <p class="small text-white-50 mb-0">Jln Raya Ponorogo-Trenggalek, Jintap, Wonoketro, Kec. Jetis</p>
                 </div>
 
                 <!-- Body Form -->

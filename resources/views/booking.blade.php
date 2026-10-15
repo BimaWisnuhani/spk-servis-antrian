@@ -12,7 +12,7 @@
                 <div class="p-4 p-md-5">
                     <div class="text-center mb-4">
                         <h1 class="h4 text-gray-900 font-weight-bold">
-                            <i class="fas fa-calendar-alt text-primary mr-2"></i>Form Booking Antrian
+                            <i class="fas fa-calendar-alt text-primary mr-2"></i>Form Booking Antrian Utama Motor
                         </h1>
                         <p class="text-muted small">Silakan isi formulir di bawah untuk mendaftar antrian servis Anda.</p>
                     </div>
@@ -198,7 +198,7 @@
                         <thead class="bg-primary text-white">
                             <tr>
                                 <th width="8%">No</th>
-                                <th>Kode</th>
+                                <th>Kode Antrian</th>
                                 <th>Nomor Polisi</th>
                                 <th>Jam Datang</th>
                                 <th>Estimasi Selesai</th>

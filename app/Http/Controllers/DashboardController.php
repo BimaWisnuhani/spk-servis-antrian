@@ -99,7 +99,7 @@ class DashboardController extends Controller
         } elseif ($kode == 'C2') {
             $fieldValue = $antrian->estimasi_waktu ?? $antrian->c2_id ?? null;
         } elseif ($kode == 'C3') {
-            $fieldValue = $antrian->awal_kedatangan ?? $antrian->waktu_datang ?? $antrian->c3_id ?? null;
+            $fieldValue = $antrian->awal_kedatangan ?? $antrian->waktu_datang ?? $antrian->c3_id ?? null;   
         } elseif ($kode == 'C5') {
             $fieldValue = $antrian->status_pesan ?? $antrian->c5_id ?? null;
         }

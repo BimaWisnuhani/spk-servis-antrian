@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AntrianServis;
 use App\Models\BobotKriteria;
 use App\Models\SubKriteria;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -140,5 +141,16 @@ public function create(Request $request)
     {
         $antrian = AntrianServis::findOrFail($id);
         return view('booking_sukses', compact('antrian'));
+    }
+
+    public function downloadInvoice($id)
+    {
+        $antrian = AntrianServis::findOrFail($id);
+
+        // Load view khusus PDF ukuran A5 potret (pas untuk layar ponsel)
+        $pdf = Pdf::loadView('booking_invoice_pdf', compact('antrian'));
+        $pdf->setPaper('a5', 'portrait');
+
+        return $pdf->download('Bukti-Booking-' . $antrian->kode_antrian . '.pdf');
     }
 }

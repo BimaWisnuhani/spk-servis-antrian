@@ -18,6 +18,7 @@
                     <thead class="thead-dark text-center">
                         <tr>
                             <th width="50">Ranking</th>
+                            <th>Kode Antrian</th>
                             <th>No Polisi</th>
                             <th>Layanan (C1)</th>
                             <th>Vektor S</th>
@@ -35,6 +36,9 @@
                                     {{ $key + 1 }}
                                 @endif
                             </td>
+                            <td class="text-center font-weight-bold text-success">
+                                {{ $r['antrian']->kode_antrian ?? '-' }}
+                            </td>
                             <td class="font-weight-bold text-uppercase">
                                 {{ $r['antrian']->no_polisi ?? $r['antrian']->nopol ?? '-' }}
                             </td>
@@ -51,7 +55,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="text-center">Tidak ada data untuk dihitung.</td>
+                            <td colspan="7" class="text-center">Tidak ada data untuk dihitung.</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -118,7 +122,8 @@
                             <table class="table table-sm table-bordered text-center small">
                                 <thead class="bg-light font-weight-bold">
                                     <tr>
-                                        <th>Alternatif</th>
+                                        <th>Kode</th>
+                                        <th>Alternatif (No Pol)</th>
                                         @foreach($kriterias as $k)
                                             @php
                                                 $wjHeader = $totalBobot > 0 ? ($k->bobot / $totalBobot) : 0;
@@ -132,6 +137,9 @@
                                 <tbody>
                                     @foreach($ranking as $r)
                                     <tr>
+                                        <td class="font-weight-bold text-success text-center">
+                                            {{ $r['antrian']->kode_antrian ?? '-' }}
+                                        </td>
                                         <td class="font-weight-bold text-left">
                                             {{ $r['antrian']->no_polisi ?? $r['antrian']->nopol ?? '-' }}
                                         </td>
@@ -150,7 +158,7 @@
                                     </tr>
                                     @endforeach
                                     <tr class="bg-light font-weight-bold">
-                                        <td colspan="{{ count($kriterias) + 1 }}" class="text-right">Total Vektor S (&sum;S):</td>
+                                        <td colspan="{{ count($kriterias) + 2 }}" class="text-right">Total Vektor S (&sum;S):</td>
                                         <td class="text-primary">{{ number_format($totalS, 4) }}</td>
                                     </tr>
                                 </tbody>
@@ -167,7 +175,7 @@
                                 @foreach($ranking as $r)
                                 <li class="mb-2">
                                     <i class="fas fa-check-circle text-success mr-2"></i>
-                                    V ({{ $r['antrian']->no_polisi ?? $r['antrian']->nopol ?? '-' }}) = {{ number_format($r['s_value'], 4) }} / {{ number_format($totalS, 4) }} =
+                                    V (<span class="text-success font-weight-bold">{{ $r['antrian']->kode_antrian ?? '-' }}</span> - {{ $r['antrian']->no_polisi ?? $r['antrian']->nopol ?? '-' }}) = {{ number_format($r['s_value'], 4) }} / {{ number_format($totalS, 4) }} =
                                     <strong class="text-primary font-weight-bold">{{ number_format($r['v_value'], 4) }}</strong>
                                 </li>
                                 @endforeach

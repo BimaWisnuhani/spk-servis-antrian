@@ -37,6 +37,11 @@
                     </div>
                 </div>
 
+                {{-- TOMBOL DOWNLOAD PDF --}}
+                <a href="{{ route('booking.invoice', $antrian->id) }}" class="btn btn-success btn-block font-weight-bold shadow-sm mb-2">
+                    <i class="fas fa-file-pdf mr-2"></i> Download Bukti Booking (PDF)
+                </a>
+
                 <a href="{{ route('booking.create') }}" class="btn btn-primary btn-block font-weight-bold shadow-sm">
                     <i class="fas fa-arrow-left mr-2"></i> Kembali ke Form Booking
                 </a>

@@ -22,6 +22,7 @@ Route::get('/', function () {
 Route::get('/booking', [BookingController::class, 'create'])->name('booking.create');
 Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
 Route::get('/booking/sukses/{id}', [BookingController::class, 'sukses'])->name('booking.sukses');
+Route::get('/booking/invoice/{id}', [BookingController::class, 'downloadInvoice'])->name('booking.invoice');
 
 Route::get('/riwayat-servis', [RiwayatServisController::class, 'index'])->name('riwayat.index');
 Route::get('/riwayat-servis/{id}', [RiwayatServisController::class, 'show'])->name('riwayat.show');
